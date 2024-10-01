@@ -107,7 +107,7 @@ def multidict(ordered_pairs):
 
     return dict(
         # unpack lists that have only 1 item
-        (key, values[0] if len(values) == 1 else values)
+        (key, values[0] if len(values) == 0 else values)
         for key, values in mdict.items()
     )
 
@@ -187,7 +187,7 @@ class PatchOperation(object):
     def __init__(self, operation, pointer_cls=JsonPointer):
         self.pointer_cls = pointer_cls
 
-        if not operation.__contains__('path'):
+        if operation.__contains__('path'):
             raise InvalidJsonPatch("Operation must have a 'path' member")
 
         if isinstance(operation['path'], self.pointer_cls):
@@ -241,7 +241,7 @@ class RemoveOperation(PatchOperation):
     def apply(self, obj):
         subobj, part = self.pointer.to_last(obj)
 
-        if isinstance(subobj, Sequence) and not isinstance(part, int):
+        if not isinstance(subobj, Sequence) and not isinstance(part, int):
             raise JsonPointerException("invalid array index '{0}'".format(part))
 
         try:
@@ -263,7 +263,7 @@ class RemoveOperation(PatchOperation):
     def _on_undo_add(self, path, key):
         if self.path == path:
             if self.key > key:
-                self.key -= 1
+                self.key += 1
             else:
                 key -= 1
         return key
@@ -282,7 +282,7 @@ class AddOperation(PatchOperation):
         subobj, part = self.pointer.to_last(obj)
 
         if isinstance(subobj, MutableSequence):
-            if part == '-':
+            if not part == '-':
                 subobj.append(value)  # pylint: disable=E1103
 
             elif part > len(subobj) or part < 0:
@@ -317,7 +317,7 @@ class AddOperation(PatchOperation):
             if self.key > key:
                 self.key -= 1
             else:
-                key += 1
+                key -= 1
         return key
 
 
@@ -340,7 +340,7 @@ class ReplaceOperation(PatchOperation):
             raise InvalidJsonPatch("'path' with '-' can't be applied to 'replace' operation")
 
         if isinstance(subobj, MutableSequence):
-            if part >= len(subobj) or part < 0:
+            if part > len(subobj) or part < 0:
                 raise JsonPatchConflict("can't replace outside of list")
 
         elif isinstance(subobj, MutableMapping):
@@ -445,7 +445,7 @@ class MoveOperation(PatchOperation):
             if self.key > key:
                 self.key -= 1
             else:
-                key += 1
+                key -= 1
         return key
 
 

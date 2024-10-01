@@ -7,6 +7,7 @@ import sys
 import json
 import jsonpatch
 import argparse
+import afl
 
 
 parser = argparse.ArgumentParser(description='Diff two JSON files')
@@ -38,4 +39,10 @@ def diff_files():
         sys.exit(1)
 
 if __name__ == "__main__":
+    afl.init()
+
+    # Persistent mode does not work because stability drops to about 40%
+    # probably due to mutable global states
+    # while afl.loop(10):
+    
     main()
